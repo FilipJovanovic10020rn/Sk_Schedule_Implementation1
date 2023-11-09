@@ -42,7 +42,7 @@ public class Implementation1 implements ClassSchedule {
             }
         }
         if(!flag)
-            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim imenom");
 
         int count = 0;
 

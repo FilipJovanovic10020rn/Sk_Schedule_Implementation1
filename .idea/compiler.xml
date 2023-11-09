@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Schedule_Implementation1" />
+        <module name="Sk_Schedule_Implementation1" />
       </profile>
     </annotationProcessing>
   </component>
