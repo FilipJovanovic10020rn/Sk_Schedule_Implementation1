@@ -23,6 +23,7 @@ public class Implementation1 implements ClassSchedule {
     public void createClass(Schedule schedule, int startTime, int duration, String classroomName, String lectureName, String professor, Date fromDate, Date toDate)
             throws DatesException,DurationException,ClassroomDoesntExistException,TermTakenException,WrongStartTimeException, InternalError {
 
+
         if(schedule.getStartHours()>startTime || schedule.getEndHours()<startTime){
             throw new WrongStartTimeException("Vreme koje ste dali je van radnih sati");
         }
@@ -48,7 +49,13 @@ public class Implementation1 implements ClassSchedule {
 
         List<Term> termini = new ArrayList<>();
 
+//        System.out.println(fromDate + " " + toDate);
+
         for(Map.Entry<Term, ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+//            System.out.println(entry.getKey().getDate() + " " + entry.getKey().getStartTime() + " " + entry.getKey().getClassroom());
+//            if(entry.getValue()==null){
+//                System.out.println("jesam null");
+//            }
             for(int i =0 ;i<duration; i++){
                 if(entry.getKey().getDate().equals(fromDate) && entry.getKey().getClassroom().getName().equals(classroomName)
                         && entry.getKey().getStartTime() == startTime+i){
@@ -71,6 +78,7 @@ public class Implementation1 implements ClassSchedule {
                 return;
             }
         }
+        System.out.println("count " + count + " dur " + duration);
         if(count!=duration)
         {
             throw new TermTakenException("ne postoji slobodan termin");
@@ -184,7 +192,7 @@ public class Implementation1 implements ClassSchedule {
                 for(Term t : termini){
                     schedule.getScheduleMap().put(t,cl);
                 }
-                return;
+                break;
             }
         }
         if(count!=duration)
