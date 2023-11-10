@@ -28,7 +28,7 @@ public class Implementation1 implements ClassSchedule {
             throw new WrongStartTimeException("Vreme koje ste dali je van radnih sati");
         }
 
-        if(fromDate.before(schedule.getStartDate() ) || toDate.after(schedule.getEndDate())){
+        if(fromDate.before(schedule.getStartDate())){
             throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
         }
 
@@ -87,7 +87,7 @@ public class Implementation1 implements ClassSchedule {
 
 
     @Override
-    public void RemoveClass(Schedule schedule,Date date,Date toDate, int startTime, String classroomName, String lectureName)
+    public void removeClass(Schedule schedule,Date date,Date toDate, int startTime, String classroomName, String lectureName)
             throws WrongStartTimeException,DatesException, WrongDateException,WrongLectureNameException, ClassroomDoesntExistException, ClassLectureDoesntExistException
     {
 
@@ -132,7 +132,7 @@ public class Implementation1 implements ClassSchedule {
 
 
     @Override
-    public void RescheduleClass(Schedule schedule, Date oldDate, Date oldToDate, int oldStartTime, String oldClassroomName, String lectureName,
+    public void rescheduleClass(Schedule schedule, Date oldDate, Date oldToDate, int oldStartTime, String oldClassroomName, String lectureName,
                                 Date newDate,Date newToDate, int newStartTime, String newClassroomName)
             throws DatesException,ClassroomDoesntExistException,WrongStartTimeException,WrongDateException,WrongLectureNameException,WrongClassroomNameException, TermTakenException{
 
@@ -163,15 +163,19 @@ public class Implementation1 implements ClassSchedule {
                     && entry.getKey().getStartTime() == oldStartTime && entry.getValue().getClassName().equals(lectureName)){
                 duration = entry.getValue().getDuration();
                 cl = entry.getValue();
+                break;
             }
         }
         if(cl==null){
             throw new ClassLectureDoesntExistException("ne postoji cas sa zadatim podacima");
         }
 
+        ClassLecture cl2 = new ClassLecture(cl.getClassName(),cl.getProfessor(),newStartTime,duration,newDate,newToDate);
         int count = 0;
 
         List<Term> termini = new ArrayList<>();
+
+
 
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
             for(int i =0 ;i<duration; i++){
@@ -190,7 +194,7 @@ public class Implementation1 implements ClassSchedule {
                     throw new InternalError("Greska u bazi");
                 }
                 for(Term t : termini){
-                    schedule.getScheduleMap().put(t,cl);
+                    schedule.getScheduleMap().put(t,cl2);
                 }
                 break;
             }
