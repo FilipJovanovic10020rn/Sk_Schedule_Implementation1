@@ -19,7 +19,7 @@ public class Main {
         //TODO IZBACI DRUGI DATUM IZ EXCEPTION U IMPLEMENTACIJI1
         List<Classroom> classrooms = new ArrayList<>();
         // nemoj null kao addons
-        //classrooms.add(classSchedule.createClassroom(classrooms,"Ucionica",2, AddOns.PEN));
+        classSchedule.createClassroom(classrooms,"Ucionica",2, AddOns.PEN);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         Schedule schedule = null;
@@ -33,6 +33,9 @@ public class Main {
             e.printStackTrace();
         }
 
+
+
+
         if(schedule==null){
             System.out.println("pukli smo ko picke");
         }
@@ -42,7 +45,9 @@ public class Main {
 
         try {
             Date startDate = dateFormat.parse("02.10.2023");
+            Date startDate2 = dateFormat.parse("03.10.2023");
             classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate, startDate);
+            classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate2, null);
             // OVO PROLAZI
 //            classSchedule.createClass(schedule, 13, 1, "Ucionica", "SK", "Surla", startDate, startDate);
 
@@ -52,6 +57,21 @@ public class Main {
                 System.out.println(term.getStartTime());
             }
             System.out.println("?");
+
+
+            String filePath = "src/test/resources/exported/testdata.csv";
+            String filePath1 = "src/test/resources/exported/testdata.json";
+
+//            classSchedule.exportCSV(schedule,filePath);
+            classSchedule.exportJSON(schedule,filePath1);
+
+            if(filePath == "src/test/resources/exported/testdata.csv")
+            throw new RuntimeException("kraj");
+
+
+
+
+
             // nisam proverio da li je null
 //            List<Term> termList = classSchedule.findTerms(schedule,startDate,null,"Surla",false);
             // nisam proverio da li je null
