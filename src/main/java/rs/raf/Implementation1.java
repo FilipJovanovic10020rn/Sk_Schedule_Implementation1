@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.text.PDFTextStripper;
 import rs.raf.classes.ClassLecture;
 import rs.raf.classes.Classroom;
 import rs.raf.classes.Schedule;
@@ -291,19 +292,15 @@ public class Implementation1 implements ClassSchedule {
 
     }
 
-    private String formatDate(Date date){
-        Date dateFromUtilDate = date;
-
-        Instant instant = dateFromUtilDate.toInstant();
-        LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
-
-        String formattedDate = localDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-
-        return formattedDate;
-    }
-
     @Override
     public void importCSV(Schedule schedule, String filePath) {
+
+        if(filePath.isEmpty()){
+            throw new FilePathException("Greska sa file lokacijom");
+        }
+        if(schedule.getScheduleMap().isEmpty()){
+            throw new ScheduleException("Morate da inicijalizujete raspored prvo");
+        }
 
         int duration;
         boolean flag = false;
@@ -416,7 +413,156 @@ public class Implementation1 implements ClassSchedule {
 
     @Override
     public void importPDF(Schedule schedule, String filePath) {
+        if(filePath.isEmpty()){
+            throw new FilePathException("Greska sa file lokacijom");
+        }
+        if(schedule.getScheduleMap().isEmpty()){
+            throw new ScheduleException("Morate da inicijalizujete raspored prvo");
+        }
 
+        File file = new File(filePath);
+        if(!file.exists()){
+            throw new FilePathException("File ne postoji");
+        }
+
+        List<Map<String,String>> result = new ArrayList<>();
+
+        try(PDDocument document = PDDocument.load(file)){
+            PDFTextStripper textStripper = new PDFTextStripper();
+
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                textStripper.setStartPage(i + 1);
+                textStripper.setEndPage(i + 1);
+
+                try {
+                    String content = textStripper.getText(document);
+
+                    // Parse the content and extract data into a map
+                    // You need to customize this part based on your PDF structure
+                    Map<String, String> entry = parsePdfContent(content);
+
+                    result.add(entry);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        for(Map<String, String> map : result){
+
+            String professorName = "";
+            String classLectureName = "";
+            int duration = 0;
+            Term term = null;
+
+            for(Map.Entry<String,String> entry: map.entrySet()){
+
+                if(entry.getKey().toString().equals("ClassLecture")){
+
+                    String[] keyValuePairs = entry.getValue()
+                            .replaceAll("[{}]", "")
+                            .split(", ");
+
+                    Map<String, String> keyValueMap = new HashMap<>();
+                    for (String pair : keyValuePairs) {
+                        String[] single = pair.split("=");
+                        if (single.length == 2) {
+                            keyValueMap.put(single[0].trim(), single[1].trim());
+                        }
+                    }
+
+                    // Extract values from the map
+                    String durationString = keyValueMap.get("duration");
+
+                    professorName = keyValueMap.get("professor");
+                    classLectureName = keyValueMap.get("className");
+                    duration = Integer.parseInt(durationString);
+
+
+                }
+                else{
+                    String[] keyValuePairs = entry.getValue()
+                            .replaceAll("[{}]", "")
+                            .split(", ");
+
+                    Map<String, String> keyValueMap = new HashMap<>();
+                    for (String pair : keyValuePairs) {
+                        String[] single = pair.split("=");
+                        if (single.length == 2) {
+                            keyValueMap.put(single[0].trim(), single[1].trim());
+                        }
+                    }
+
+                    // Extract values from the map
+                    String dateString = keyValueMap.get("date");
+                    String classroomName = keyValueMap.get("classroom");
+                    String startTimeString = keyValueMap.get("startTime");
+
+                    // Parse date
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+                    Date date = null;
+                    try {
+                        date = dateFormat.parse(dateString);
+                    } catch (ParseException e) {
+                        e.printStackTrace(); // Handle parsing exception
+                    }
+                    int startTime = Integer.parseInt(startTimeString);
+
+                    term = new Term(schedule.getClassroomByName(classroomName),startTime,date);
+
+                }
+            }
+            if(term == null || duration == 0 || classLectureName == "" || professorName == ""){
+//                throw new ImportingException("");
+            }
+            else{
+                ClassLecture classLecture = new ClassLecture(classLectureName,professorName, term.getStartTime(), duration, term.getDate(),null);
+
+                boolean toAdd = false;
+
+                for(Map.Entry<Term,ClassLecture> entryInSchedule : schedule.getScheduleMap().entrySet()){
+                    Term termForUse = entryInSchedule.getKey();
+                    if(termForUse.getStartTime() == term.getStartTime() && termForUse.getDate().equals(term.getDate()) && termForUse.getClassroom().getName().equals(term.getClassroom().getName())){
+                        if(entryInSchedule.getValue() == null){
+                            toAdd = true;
+                            term = termForUse;
+                        }
+                        else{
+                            System.out.println("Termin:"+ term.toString() + " je zauzet, preskace se dodavanje: " + classLecture.toString());
+                        }
+                    }
+                }
+
+                if(toAdd){
+                    schedule.getScheduleMap().put(term,classLecture);
+                }
+
+            }
+        }
+        System.out.println("Finished importing file");
+    }
+
+    private Map<String,String> parsePdfContent(String content){
+        Map<String, String> resultMap = new HashMap<>();
+
+        // Split content into lines
+        String[] lines = content.split("\\r?\\n");
+
+        for (String line : lines) {
+            // Split each line into key and value based on ": "
+            String[] parts = line.split(": ", 2);
+
+            if (parts.length == 2) {
+                String key = parts[0].trim();
+                String value = parts[1].trim();
+
+                // Add key-value pair to the result map
+                resultMap.put(key, value);
+            }
+        }
+
+        return resultMap;
     }
 
     @Override
@@ -442,6 +588,12 @@ public class Implementation1 implements ClassSchedule {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void importJSON(Schedule schedule, String filePath) {
+
+    }
+
 
     // Utility method to convert a map to a list of maps
     private List<Map<String, Object>> convertMapToListOfMaps(Map<Term, ClassLecture> data) {
@@ -487,10 +639,14 @@ public class Implementation1 implements ClassSchedule {
 
     }
 
+    private String formatDate(Date date){
+        Date dateFromUtilDate = date;
 
+        Instant instant = dateFromUtilDate.toInstant();
+        LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
 
-    @Override
-    public void importJSON(Schedule schedule, String filePath) {
+        String formattedDate = localDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
+        return formattedDate;
     }
 }
