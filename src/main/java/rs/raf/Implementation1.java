@@ -1,6 +1,10 @@
 package rs.raf;
 
 import com.google.gson.Gson;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import rs.raf.classes.ClassLecture;
 import rs.raf.classes.Classroom;
 import rs.raf.classes.Schedule;
@@ -238,7 +242,6 @@ public class Implementation1 implements ClassSchedule {
         //        "Naziv predavanja","Profesor","Ucionica","Datum od", "Datum do","Vreme od","Vreme do"
 
 
-        // todo sort
         List<Term> termList = new ArrayList<>();
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
             termList.add(entry.getKey());
@@ -254,14 +257,6 @@ public class Implementation1 implements ClassSchedule {
             }
             ClassLecture classLecture = schedule.getScheduleMap().get(t);
             if(t.getStartTime()==classLecture.getStartTime()){
-
-                // changing the date format
-//                Date dateFromUtilDate = t.getDate();
-//
-//                Instant instant = dateFromUtilDate.toInstant();
-//                LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
-//
-//                String formattedDate = localDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
                 String formattedDate = formatDate(t.getDate());
 
@@ -314,6 +309,51 @@ public class Implementation1 implements ClassSchedule {
 
     @Override
     public void exportPDF(Schedule schedule, String filePath) {
+        if(filePath.isEmpty()){
+            throw new FilePathException("Greska sa file lokacijom");
+        }
+        if(schedule.getScheduleMap().isEmpty()){
+            throw new ScheduleException("Pokusavate da exportujete prazan raspored");
+        }
+        try {
+            File directory = new File(filePath).getParentFile();
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            try(PDDocument document = new PDDocument()){
+
+                List<Map<String, Object>> dataList = convertMapToListOfMaps(schedule.getScheduleMap());
+
+                for(Map<String,Object> entry: dataList){
+                    PDPage page = new PDPage();
+                    document.addPage(page);
+
+
+                    try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+
+
+
+                        contentStream.beginText();
+                        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12); // Example font and size, adjust as needed
+                        contentStream.newLineAtOffset(100, 700);
+
+                        for (Map.Entry<String, Object> field : entry.entrySet()) {
+                            contentStream.showText(field.getKey() + ": " + field.getValue().toString());
+                            contentStream.newLineAtOffset(0, -20); // Adjust as needed
+                        }
+                        contentStream.endText();
+
+                    }
+                }
+                document.save(filePath);
+                System.out.println("PDF file exported successfully to: " + filePath);
+
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -330,15 +370,23 @@ public class Implementation1 implements ClassSchedule {
         if(schedule.getScheduleMap().isEmpty()){
             throw new ScheduleException("Pokusavate da exportujete prazan raspored");
         }
+        try {
+            File directory = new File(filePath).getParentFile();
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+            try (FileWriter writer = new FileWriter(filePath)) {
+                // Convert the entry set to a list of maps
+                List<Map<String, Object>> dataList = convertMapToListOfMaps(schedule.getScheduleMap());
 
-        try (FileWriter writer = new FileWriter(filePath)) {
-            // Convert the entry set to a list of maps
-            List<Map<String, Object>> dataList = convertMapToListOfMaps(schedule.getScheduleMap());
-
-            new Gson().toJson(dataList, writer);
-        } catch (IOException e) {
-            e.printStackTrace(); // Handle the exception according to your application's needs
+                new Gson().toJson(dataList, writer);
+            } catch (IOException e) {
+                e.printStackTrace(); // Handle the exception according to your application's needs
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
 
 
     }
@@ -376,9 +424,8 @@ public class Implementation1 implements ClassSchedule {
             classLectureDetails.put("duration", classLecture.getDuration());
 
 
-            map.put("lecture", classLectureDetails);
+            map.put("ClassLecture", classLectureDetails);
             map.put("Term",termDetails);
-
 
 
             result.add(map);
