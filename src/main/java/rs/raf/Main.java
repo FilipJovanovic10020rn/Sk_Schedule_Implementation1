@@ -46,8 +46,8 @@ public class Main {
         try {
             Date startDate = dateFormat.parse("02.10.2023");
             Date startDate2 = dateFormat.parse("03.10.2023");
-            classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate, startDate);
-            //classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate2, null);
+            classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate, null);
+           // classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate2, null);
             // OVO PROLAZI
 //            classSchedule.createClass(schedule, 13, 1, "Ucionica", "SK", "Surla", startDate, startDate);
 
@@ -67,14 +67,13 @@ public class Main {
 
             classSchedule.removeClass(schedule,startDate,startDate,13,"Ucionica","SK");
 
-            classSchedule.importCSV(schedule,filePath);
-
+            //classSchedule.importCSV(schedule,filePath);
+            classSchedule.importJSON(schedule,filePath1);
 
 
 
             if(filePath == "src/test/resources/exported/testdata.csv")
             //throw new RuntimeException("kraj");
-
             termList = classSchedule.findTerms(schedule,startDate,3,false,"Ucionica");
 
             for(Term term : termList){

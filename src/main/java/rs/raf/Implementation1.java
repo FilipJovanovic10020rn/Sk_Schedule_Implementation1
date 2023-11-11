@@ -1,6 +1,6 @@
 package rs.raf;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -591,6 +591,51 @@ public class Implementation1 implements ClassSchedule {
 
     @Override
     public void importJSON(Schedule schedule, String filePath) {
+
+
+        // Create a Gson instance
+        Gson gson = new Gson();
+
+        try (FileReader fileReader = new FileReader(filePath)) {
+            // Deserialize JSON data into JsonArray
+            JsonArray jsonArray = gson.fromJson(fileReader, JsonArray.class);
+
+            // Access the data
+            for (JsonElement jsonElement : jsonArray) {
+                JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+                // Access lecture and Term objects dynamically
+                JsonObject lecture = jsonObject.getAsJsonObject("ClassLecture");
+                int duration = lecture.getAsJsonPrimitive("duration").getAsInt();
+                String professor = lecture.getAsJsonPrimitive("professor").getAsString();
+                String className = lecture.getAsJsonPrimitive("className").getAsString();
+
+                JsonObject term = jsonObject.getAsJsonObject("Term");
+                String date = term.getAsJsonPrimitive("date").getAsString();
+                String classroom = term.getAsJsonPrimitive("classroom").getAsString();
+                int startTime = term.getAsJsonPrimitive("startTime").getAsInt();
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+
+                Date startDate = dateFormat.parse(date);
+
+                ClassLecture cl = new ClassLecture(className,professor,startTime,duration,startDate,null);
+
+                for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+                    for(int j = 0; j<duration; j++){
+                        if(entry.getKey().getDate().equals(startDate) && entry.getKey().getClassroom().getName().equals(classroom)
+                                && entry.getKey().getStartTime() == startTime+j)
+                        {
+                            schedule.getScheduleMap().put(entry.getKey(),cl);
+                        }
+                    }
+                }
+                // Print the data
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
