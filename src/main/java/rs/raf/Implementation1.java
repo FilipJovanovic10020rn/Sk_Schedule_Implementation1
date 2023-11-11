@@ -62,13 +62,8 @@ public class Implementation1 implements ClassSchedule {
 
         List<Term> termini = new ArrayList<>();
 
-//        System.out.println(fromDate + " " + toDate);
 
         for(Map.Entry<Term, ClassLecture> entry : schedule.getScheduleMap().entrySet()){
-//            System.out.println(entry.getKey().getDate() + " " + entry.getKey().getStartTime() + " " + entry.getKey().getClassroom());
-//            if(entry.getValue()==null){
-//                System.out.println("jesam null");
-//            }
             for(int i =0 ;i<duration; i++){
                 if(entry.getKey().getDate().equals(fromDate) && entry.getKey().getClassroom().getName().equals(classroomName)
                         && entry.getKey().getStartTime() == startTime+i){
@@ -91,7 +86,6 @@ public class Implementation1 implements ClassSchedule {
                 return;
             }
         }
-        System.out.println("count " + count + " dur " + duration);
         if(count!=duration)
         {
             throw new TermTakenException("ne postoji slobodan termin");
@@ -521,18 +515,16 @@ public class Implementation1 implements ClassSchedule {
 
                 boolean toAdd = false;
 
-                for(Map.Entry<Term,ClassLecture> entryInSchedule : schedule.getScheduleMap().entrySet()){
-                    Term termForUse = entryInSchedule.getKey();
-                    if(termForUse.getStartTime() == term.getStartTime() && termForUse.getDate().equals(term.getDate()) && termForUse.getClassroom().getName().equals(term.getClassroom().getName())){
-                        if(entryInSchedule.getValue() == null){
-                            toAdd = true;
-                            term = termForUse;
-                        }
-                        else{
-                            System.out.println("Termin:"+ term.toString() + " je zauzet, preskace se dodavanje: " + classLecture.toString());
+                for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+                    for(int j = 0; j<duration; j++){
+                        if(entry.getKey().getDate().equals(term.getDate()) && entry.getKey().getClassroom().getName().equals(term.getClassroom().getName())
+                                && entry.getKey().getStartTime() == term.getStartTime()+j)
+                        {
+                            schedule.getScheduleMap().put(entry.getKey(),classLecture);
                         }
                     }
                 }
+
 
                 if(toAdd){
                     schedule.getScheduleMap().put(term,classLecture);
