@@ -47,7 +47,7 @@ public class Main {
             Date startDate = dateFormat.parse("02.10.2023");
             Date startDate2 = dateFormat.parse("03.10.2023");
             classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate, startDate);
-            classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate2, null);
+            //classSchedule.createClass(schedule, 13, 3, "Ucionica", "SK", "Surla", startDate2, null);
             // OVO PROLAZI
 //            classSchedule.createClass(schedule, 13, 1, "Ucionica", "SK", "Surla", startDate, startDate);
 
@@ -62,13 +62,25 @@ public class Main {
             String filePath = "src/test/resources/exported/testdata.csv";
             String filePath1 = "src/test/resources/exported/testdata.json";
 
-//            classSchedule.exportCSV(schedule,filePath);
+            classSchedule.exportCSV(schedule,filePath);
             classSchedule.exportJSON(schedule,filePath1);
 
+            classSchedule.removeClass(schedule,startDate,startDate,13,"Ucionica","SK");
+
+            classSchedule.importCSV(schedule,filePath);
+
+
+
+
             if(filePath == "src/test/resources/exported/testdata.csv")
-            throw new RuntimeException("kraj");
+            //throw new RuntimeException("kraj");
 
+            termList = classSchedule.findTerms(schedule,startDate,3,false,"Ucionica");
 
+            for(Term term : termList){
+                System.out.println(term.toString());
+            }
+            System.out.println("?");
 
 
 
@@ -77,21 +89,21 @@ public class Main {
             // nisam proverio da li je null
 //            List<Term> termList = classSchedule.findTerms(schedule,"SK");
 
-            Date newstartDate = dateFormat.parse("03.10.2023");
-
-            classSchedule.rescheduleClass(schedule,startDate,startDate,13,"Ucionica","SK",newstartDate,newstartDate,12,"Ucionica");
-
-            termList = classSchedule.findTerms(schedule,startDate,2,true,"Ucionica");
-
-            for(Term term : termList){
-                System.out.println(term.getStartTime());
-            }
-            System.out.println("novi");
-            termList = classSchedule.findTerms(schedule,newstartDate,2,true,"Ucionica");
-
-            for(Term term : termList){
-                System.out.println(term.getStartTime());
-            }
+//            Date newstartDate = dateFormat.parse("03.10.2023");
+//
+//            classSchedule.rescheduleClass(schedule,startDate,startDate,13,"Ucionica","SK",newstartDate,newstartDate,12,"Ucionica");
+//
+//            termList = classSchedule.findTerms(schedule,startDate,2,true,"Ucionica");
+//
+//            for(Term term : termList){
+//                System.out.println(term.getStartTime());
+//            }
+//            System.out.println("novi");
+//            termList = classSchedule.findTerms(schedule,newstartDate,2,true,"Ucionica");
+//
+//            for(Term term : termList){
+//                System.out.println(term.getStartTime());
+//            }
 
 
         }

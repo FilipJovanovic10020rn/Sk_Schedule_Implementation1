@@ -16,9 +16,9 @@ import rs.raf.schedule_management.ScheduleManager;
 import com.opencsv.CSVWriter;
 
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -305,6 +305,63 @@ public class Implementation1 implements ClassSchedule {
     @Override
     public void importCSV(Schedule schedule, String filePath) {
 
+        int duration;
+        boolean flag = false;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+
+            // Read the file line by line
+            while ((line = br.readLine()) != null) {
+                // Split the line by the CSV delimiter (comma, in this case)
+                String[] fields = line.split(",");
+
+                // Process the fields
+                for (int i = 0; i < fields.length; i++) {
+                    // Remove leading and trailing spaces and quotation marks
+                    //if
+                    fields[i] = fields[i].trim().replaceAll("^\"|\"$", "");
+
+
+                    System.out.print(fields[i] + " ");
+                }
+                if(flag){
+
+                    System.out.println(fields[1]);
+                    System.out.println(fields[0]);
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+
+                    Date date = dateFormat.parse(fields[3]);
+
+                    String[] start = fields[4].split(":");
+                    String[] end = fields[5].split(":");
+                    int s = Integer.parseInt(start[0]);
+                    int e = Integer.parseInt(end[0]);
+                    duration = e-s;
+
+                    ClassLecture cl = new ClassLecture(fields[0],fields[1],s,duration,date,null);
+
+                    System.out.println(cl.toString());
+                    for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+                        for(int j = 0; j<duration; j++){
+                            if(entry.getKey().getDate().equals(date) && entry.getKey().getClassroom().getName().equals(fields[2])
+                                    && entry.getKey().getStartTime() == s+j)
+                            {
+                                schedule.getScheduleMap().put(entry.getKey(),cl);
+                            }
+                        }
+                    }
+
+                }
+
+                flag=true;
+                System.out.println(); // Move to the next line
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -380,15 +437,10 @@ public class Implementation1 implements ClassSchedule {
                 List<Map<String, Object>> dataList = convertMapToListOfMaps(schedule.getScheduleMap());
 
                 new Gson().toJson(dataList, writer);
-            } catch (IOException e) {
-                e.printStackTrace(); // Handle the exception according to your application's needs
             }
         }catch (Exception e){
             e.printStackTrace();
         }
-
-
-
     }
 
     // Utility method to convert a map to a list of maps
